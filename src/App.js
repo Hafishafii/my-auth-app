@@ -1,24 +1,19 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import VerifyCode from './pages/VerifyCode';
+import ForgetPassword from './pages/ForgetPassword';
+import ConfirmAccount from './pages/ConfirmAccount';
+import ChooseAccount from './pages/ChooseAccount';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/verify" element={<VerifyCode />} />
+        <Route path="/forgot-password" element={<ForgetPassword />} />
+        <Route path="/confirm" element={<ConfirmAccount name="Hafis" />} />
+        <Route path="/choose-account" element={<ChooseAccount />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
