@@ -2,9 +2,8 @@ export default function ConfirmAccount({ name = "User" }) {
     return (
       <div className="min-h-screen bg-white relative px-4">
         <p className="absolute top-4 left-4 text-sm text-black cursor-pointer hover:underline">
-          Back to login
+          ← Back to login
         </p>
-  
         <div className="flex items-center justify-center min-h-screen">
           <div className="max-w-sm w-full text-center space-y-6">
             <h2 className="text-xl font-semibold text-gray-800">
@@ -19,4 +18,3 @@ export default function ConfirmAccount({ name = "User" }) {
       </div>
     );
   }
-  
