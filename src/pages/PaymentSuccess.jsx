@@ -1,143 +1,61 @@
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import html2canvas from "html2canvas";
-import { useState } from "react";
 
 export default function PaymentSuccess() {
-  const [copiedText, setCopiedText] = useState("");
+  const [params] = useSearchParams();
+  const id = params.get("id");
+  const [receipt, setReceipt] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const token = localStorage.getItem("token");
 
-  const handleDownload = async (id) => {
-    const receipt = document.getElementById(id);
-    if (!receipt) return;
+  useEffect(() => {
+    if (!id || !token) return;
 
-    const canvas = await html2canvas(receipt);
+    fetch(`http://13.203.154.168/api/purchases/history?page=1`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const match = data.results?.find((r) => r.id.toString() === id);
+        if (match) setReceipt(match);
+      })
+      .catch(() => console.error("Error loading receipt"))
+      .finally(() => setLoading(false));
+  }, [id, token]);
+
+  const handleDownload = async () => {
+    const element = document.getElementById("receipt");
+    if (!element) return;
+    const canvas = await html2canvas(element);
     const link = document.createElement("a");
-    link.download = `${id}.png`;
+    link.download = "receipt.png";
     link.href = canvas.toDataURL();
     link.click();
   };
 
-  const handleShare = async () => {
-    const shareData = {
-      title: "Payment Receipt",
-      text: "Payment completed successfully.",
-      url: window.location.href,
-    };
-
-    try {
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        alert("Sharing not supported on this device.");
-      }
-    } catch (err) {
-      console.error("Share failed:", err);
-    }
-  };
-
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text)
-      .then(() => {
-        setCopiedText(text);
-        setTimeout(() => setCopiedText(""), 2000);
-      })
-      .catch((err) => {
-        console.error("Copy failed:", err);
-      });
-  };
-
-  const renderCard = ({
-    id,
-    amount,
-    words,
-    toName,
-    toLogo,
-    fromPhone,
-    upi,
-    bank,
-    time,
-    ref,
-  }) => (
-    <div
-      id={id}
-      className="relative bg-gray-100 p-6 rounded-md shadow-md md:p-8 md:rounded-xl overflow-hidden max-w-xl md:max-w-2xl lg:max-w-3xl w-full"
-    >
-      <p className="text-xl font-semibold mb-2">
-        Amount <span className="text-green-600">{amount} ✅</span>
-      </p>
-      <p className="text-sm text-gray-500 mb-4">{words}</p>
-
-      <p className="text-base font-medium mb-1">To</p>
-      <div className="flex items-center gap-2 mb-4">
-        <img src={toLogo} alt={toName} className="w-5 h-5 md:w-6 md:h-6" />
-        <p className="text-base">{toName}</p>
-      </div>
-
-      <p className="text-base font-medium mb-1">From</p>
-      <p className="text-base mb-1">{fromPhone}</p>
-      <p className="text-sm text-gray-500 mb-1">UPI ID: {upi}</p>
-      <p className="text-sm text-gray-500 mb-1">{bank}</p>
-      <p className="text-sm text-gray-500 mb-1">{time}</p>
-
-      <p className="text-sm text-gray-500">
-        UPI Ref No: {ref}{" "}
-        <span
-          onClick={() => handleCopy(ref)}
-          className="text-blue-500 cursor-pointer hover:underline"
-        >
-          copy
-        </span>
-      </p>
-
-      {copiedText === ref && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 
-                        bg-black text-white text-sm px-4 py-1 rounded shadow 
-                        animate-fade-in-out z-10">
-          Copied!
-        </div>
-      )}
-
-      <div className="flex justify-between mt-6 space-x-2">
-        <button
-          onClick={() => handleDownload(id)}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full md:w-auto"
-        >
-          Download
-        </button>
-        <button
-          onClick={handleShare}
-          className="bg-blue-600 text-white px-4 py-2 rounded w-full md:w-auto"
-        >
-          Share
-        </button>
-      </div>
-    </div>
-  );
+  if (loading) return <p className="text-center p-4">Loading...</p>;
+  if (!receipt) return <p className="text-center p-4 text-red-500">Receipt not found.</p>;
 
   return (
-    <div className="min-h-screen flex flex-col items-center gap-6 px-4 pt-20 md:pt-32">
-      {renderCard({
-        id: "receipt1",
-        amount: "₹349",
-        words: "Rupees Three Hundred Forty Nine Only",
-        toName: "Airtel Prepaid",
-        toLogo: "/logos/airtel.png",
-        fromPhone: "+91 9999990000",
-        upi: "9999990000@paytm",
-        bank: "ESAF Small Finance Bank - 1710",
-        time: "Paid at 08:03 PM, 22 June 2025",
-        ref: "4245346134535",
-      })}
-      {renderCard({
-        id: "receipt2",
-        amount: "₹199",
-        words: "Rupees One Hundred Ninety Nine Only",
-        toName: "Jio Prepaid",
-        toLogo: "/logos/jio.png",
-        fromPhone: "+91 8888888888",
-        upi: "8888888888@upi",
-        bank: "SBI Bank - 1122",
-        time: "Paid at 09:45 AM, 25 June 2025",
-        ref: "784512354846",
-      })}
+    <div className="min-h-screen flex flex-col items-center gap-6 px-4 pt-20 md:pt-32 bg-gray-50">
+      <div id="receipt" className="bg-white rounded shadow-md p-6 w-full max-w-xl text-black">
+        <h2 className="text-xl font-bold mb-4 text-center text-green-600">Recharge Success</h2>
+        <p><strong>Amount:</strong> ₹{receipt.amount}</p>
+        <p><strong>Phone:</strong> {receipt.phone_number}</p>
+        <p><strong>Plan:</strong> {receipt.plan_title}</p>
+        <p><strong>Provider:</strong> {receipt.provider_name}</p>
+        <p><strong>UPI Ref No:</strong> {receipt.transaction_id}</p>
+        <p><strong>Status:</strong> <span className={`font-semibold ${receipt.payment_status === "success" ? "text-green-600" : "text-red-500"}`}>{receipt.payment_status}</span></p>
+        <p><strong>Date:</strong> {new Date(receipt.created_at).toLocaleString()}</p>
+      </div>
+
+      <button
+        onClick={handleDownload}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded shadow"
+      >
+        Download Receipt
+      </button>
     </div>
   );
 }
